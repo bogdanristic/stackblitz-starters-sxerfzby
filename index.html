@@ -1,0 +1,1203 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Onboarding OS — RACI To-Do Generator</title>
+  <style>
+    :root{
+      --bg:#070a0f;
+      --panel:#0c111b;
+      --panel2:#0b0f18;
+      --text:#e7eefc;
+      --muted:#9aa9c3;
+      --border:rgba(255,255,255,.08);
+      --shadow: 0 10px 30px rgba(0,0,0,.55);
+
+      --accent:#22c55e;
+      --accent2:#16a34a;
+
+      --warn:#f59e0b;
+      --danger:#ef4444;
+
+      --radius:18px;
+      --radius2:22px;
+
+      --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono","Courier New", monospace;
+      --sans: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, "Helvetica Neue", Arial, "Noto Sans", "Liberation Sans";
+
+      --ease: cubic-bezier(.2,.9,.2,1);
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      margin:0;
+      font-family:var(--sans);
+      background:
+        radial-gradient(1200px 600px at 30% -10%, rgba(34,197,94,.20), transparent 55%),
+        radial-gradient(900px 500px at 90% 10%, rgba(59,130,246,.14), transparent 60%),
+        radial-gradient(900px 500px at 60% 120%, rgba(168,85,247,.10), transparent 60%),
+        var(--bg);
+      color:var(--text);
+    }
+    a{color:inherit; text-decoration:none}
+    a:hover{text-decoration:underline}
+    .wrap{max-width:1260px;margin:0 auto;padding:18px 16px 64px}
+
+    /* Header */
+    .header{
+      position:sticky; top:0; z-index:50;
+      margin-bottom:14px;
+      backdrop-filter: blur(10px);
+    }
+    .headerInner{
+      border:1px solid var(--border);
+      border-radius:var(--radius2);
+      background:linear-gradient(180deg,rgba(255,255,255,.05),rgba(255,255,255,.02));
+      box-shadow:var(--shadow);
+      overflow:hidden;
+    }
+    .brandRow{
+      display:flex; gap:12px; flex-wrap:wrap;
+      align-items:center; justify-content:space-between;
+      padding:14px 14px 10px;
+      border-bottom:1px solid var(--border);
+    }
+    .brand{display:flex; gap:12px; align-items:center}
+    .logo{
+      width:44px;height:44px;border-radius:16px;
+      background:
+        radial-gradient(circle at 30% 30%, rgba(255,255,255,.32), transparent 50%),
+        linear-gradient(135deg, var(--accent), var(--accent2));
+      box-shadow:0 14px 30px rgba(34,197,94,.22);
+      transform: translateZ(0);
+    }
+    .title{display:flex;flex-direction:column;line-height:1.1}
+    .title b{font-size:15px;letter-spacing:.25px}
+    .title span{font-size:12px;color:var(--muted)}
+    .controls{
+      display:flex; gap:10px; flex-wrap:wrap; align-items:center;
+    }
+    .field{
+      display:flex; align-items:center; gap:8px;
+      padding:10px 12px; background:rgba(255,255,255,.03);
+      border:1px solid var(--border); border-radius:16px;
+      transition: border-color .18s var(--ease), background .18s var(--ease);
+    }
+    .field:focus-within{border-color:rgba(255,255,255,.18); background:rgba(255,255,255,.04)}
+    .field label{font-size:12px;color:var(--muted)}
+    input, select{
+      background:transparent; border:0; outline:none; color:var(--text);
+      font-size:13px;
+    }
+    select{min-width:220px; cursor:pointer}
+    input[type="date"]{min-width:160px}
+
+    .btn{
+      cursor:pointer; border:1px solid var(--border);
+      background:rgba(255,255,255,.03); color:var(--text);
+      border-radius:16px; padding:10px 12px; font-weight:900;
+      transition: transform .18s var(--ease), background .18s var(--ease), border-color .18s var(--ease);
+      user-select:none;
+    }
+    .btn:hover{transform:translateY(-1px); background:rgba(255,255,255,.05); border-color:rgba(255,255,255,.14)}
+    .btn.primary{
+      background:linear-gradient(135deg,var(--accent),var(--accent2));
+      border-color:rgba(34,197,94,.35);
+      color:#06110a;
+      box-shadow:0 14px 30px rgba(34,197,94,.18);
+    }
+    .btn.primary:hover{border-color:rgba(34,197,94,.55)}
+    .btn.ghost{background:transparent}
+
+    /* Tabs */
+    .topTabs{
+      display:flex; gap:8px; flex-wrap:wrap;
+      padding:10px 12px 12px;
+    }
+    .tt{
+      cursor:pointer; user-select:none;
+      padding:10px 12px;
+      border-radius:16px;
+      border:1px solid var(--border);
+      background:rgba(255,255,255,.03);
+      font-weight:900;
+      font-size:13px;
+      transition: transform .18s var(--ease), background .18s var(--ease), border-color .18s var(--ease);
+    }
+    .tt:hover{transform:translateY(-1px); background:rgba(255,255,255,.05); border-color:rgba(255,255,255,.14)}
+    .tt.active{
+      border-color:rgba(34,197,94,.45);
+      background:rgba(34,197,94,.14);
+    }
+
+    /* Layout */
+    .grid{display:grid;gap:14px}
+    @media(min-width:1060px){.grid{grid-template-columns: 1.2fr .8fr}}
+
+    .card{
+      border:1px solid var(--border);
+      background:linear-gradient(180deg,rgba(255,255,255,.04),rgba(255,255,255,.02));
+      border-radius:var(--radius2);
+      box-shadow:var(--shadow);
+      overflow:hidden;
+      transform: translateZ(0);
+    }
+    .cardHead{
+      padding:14px 16px; border-bottom:1px solid var(--border);
+      display:flex; gap:12px; align-items:flex-start; justify-content:space-between;
+    }
+    .cardHead .h{display:flex; flex-direction:column; gap:4px}
+    .cardHead .h b{font-size:14px; letter-spacing:.2px}
+    .cardHead .h span{font-size:12px;color:var(--muted)}
+    .cardBody{padding:16px}
+
+    .panel{display:none; animation: fadeIn .22s var(--ease) both}
+    .panel.active{display:block}
+    @keyframes fadeIn{
+      from{opacity:0; transform: translateY(4px)}
+      to{opacity:1; transform: translateY(0)}
+    }
+
+    .chips{display:flex; gap:8px; flex-wrap:wrap}
+    .chip{
+      font-size:12px; padding:7px 10px; border-radius:999px;
+      border:1px solid var(--border); background:rgba(255,255,255,.03);
+      color:var(--muted);
+    }
+    .chip.emph{
+      color:#06110a;
+      border-color:rgba(34,197,94,.35);
+      background:linear-gradient(135deg,var(--accent),var(--accent2))
+    }
+
+    .list{display:flex;flex-direction:column;gap:10px}
+    .item{
+      border:1px solid var(--border);
+      background:rgba(255,255,255,.03);
+      border-radius:18px;
+      padding:12px 12px;
+      transition: background .18s var(--ease), border-color .18s var(--ease), transform .18s var(--ease);
+      break-inside: avoid;
+    }
+    .item:hover{background:rgba(255,255,255,.04); border-color:rgba(255,255,255,.12)}
+    .itemTop{display:flex; gap:12px; justify-content:space-between; align-items:flex-start}
+    .desc{
+      margin-top:8px; white-space:pre-wrap; font-size:13px; color:rgba(231,238,252,.92);
+      line-height:1.38;
+    }
+    .muted{color:var(--muted)}
+    .tiny{font-size:11px;color:var(--muted)}
+
+    .badge{
+      display:inline-flex; align-items:center; gap:6px;
+      padding:6px 9px; border-radius:999px; font-size:11px; font-weight:900;
+      border:1px solid var(--border); background:rgba(255,255,255,.03); color:var(--muted);
+      white-space:nowrap;
+    }
+    .badge.r{border-color:rgba(34,197,94,.45); background:rgba(34,197,94,.12); color:#86efac}
+    .badge.a{border-color:rgba(96,165,250,.45); background:rgba(96,165,250,.12); color:#93c5fd}
+    .badge.c{border-color:rgba(245,158,11,.45); background:rgba(245,158,11,.12); color:#fbbf24}
+    .badge.i{border-color:rgba(168,85,247,.45); background:rgba(168,85,247,.12); color:#c4b5fd}
+    .badge.phase{border-color:rgba(255,255,255,.12); background:rgba(255,255,255,.05); color:var(--muted)}
+    .badge.due{border-color:rgba(255,255,255,.14); background:rgba(255,255,255,.06); color:rgba(231,238,252,.9)}
+    .badge.overdue{border-color:rgba(239,68,68,.45); background:rgba(239,68,68,.14); color:#fecaca}
+
+    .seg{
+      display:flex; gap:8px; flex-wrap:wrap; align-items:center;
+      padding:10px 12px;
+      border:1px solid var(--border);
+      border-radius:18px;
+      background:rgba(255,255,255,.03);
+      margin-bottom:12px;
+    }
+    .tog{
+      display:flex; gap:8px; flex-wrap:wrap; align-items:center;
+    }
+    .pill{
+      cursor:pointer; user-select:none;
+      padding:8px 10px; border-radius:999px;
+      border:1px solid var(--border);
+      background:rgba(255,255,255,.03);
+      font-weight:900;
+      font-size:12px;
+      transition: transform .18s var(--ease), background .18s var(--ease), border-color .18s var(--ease);
+    }
+    .pill:hover{transform:translateY(-1px); background:rgba(255,255,255,.05); border-color:rgba(255,255,255,.14)}
+    .pill.active{border-color:rgba(34,197,94,.45); background:rgba(34,197,94,.12)}
+
+    .tableWrap{overflow:auto; max-height:520px; border:1px solid var(--border); border-radius:18px}
+    table{width:100%; border-collapse:separate; border-spacing:0}
+    th,td{
+      text-align:left; padding:10px 10px; font-size:12px;
+      border-bottom:1px solid var(--border);
+      vertical-align:top;
+      color:rgba(231,238,252,.95);
+    }
+    thead th{
+      position:sticky; top:0; background:var(--panel); z-index:2;
+      color:var(--muted); font-size:11px; letter-spacing:.3px; text-transform:uppercase
+    }
+
+    .warnBar{
+      display:none;
+      margin:12px 0 0;
+      padding:12px 14px;
+      border-radius:18px;
+      border:1px solid rgba(239,68,68,.35);
+      background:rgba(239,68,68,.12);
+      color:#fecaca;
+      font-size:13px;
+    }
+    .warnBar.show{display:block}
+
+    /* Printable report area */
+    .printOnly{display:none}
+    .printHeader{
+      display:flex; align-items:flex-start; justify-content:space-between; gap:14px;
+      margin-bottom:10px;
+    }
+    .printHeader h1{margin:0;font-size:16px}
+    .printHeader .meta{font-size:11px;color:#222}
+    .printList{display:flex;flex-direction:column;gap:10px}
+
+    @media print{
+      body{background:#fff;color:#000}
+      .header,.topTabs,.controls,.btn,.seg,.grid > .card:last-child{display:none !important}
+      .wrap{max-width:none;padding:0}
+      .grid{display:block}
+      .card{border:0; box-shadow:none; background:#fff}
+      .cardHead{display:none}
+      .cardBody{padding:0}
+      .panel{display:none !important}
+      #tab-report{display:block !important}
+      #tab-report .printOnly{display:block !important}
+      #tab-report .printOnly .item{border:1px solid #ddd; background:#fff}
+      .desc{color:#111}
+      .badge{border-color:#bbb;background:#f5f5f5;color:#111}
+      .badge.overdue{border-color:#e11d48;background:#ffe4e6;color:#881337}
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="header">
+      <div class="headerInner">
+        <div class="brandRow">
+          <div class="brand">
+            <div class="logo"></div>
+            <div class="title">
+              <b>Onboarding OS — RACI To-Do Generator</b>
+              <span>Pick role + start date → get a clean, dated checklist → Save as PDF</span>
+            </div>
+          </div>
+
+          <div class="controls">
+            <div class="field">
+              <label for="startDate">Start</label>
+              <input id="startDate" type="date" />
+            </div>
+
+            <div class="field">
+              <label for="roleSelect">Role</label>
+              <select id="roleSelect">
+                <option>Hiring Manager (HM)</option>
+                <option>Operations Manager (OM)</option>
+                <option>Senior Buddy (SB)</option>
+                <option>Operations Coordinator (OC)</option>
+                <option>New Hire (NH)</option>
+                <option>ALL</option>
+              </select>
+            </div>
+
+            <button class="btn primary" id="btnGenerate">Generate</button>
+            <button class="btn" id="btnCopy">Copy To-Do</button>
+            <button class="btn" id="btnPDF">Download PDF</button>
+            <button class="btn ghost" id="btnPrint">Print</button>
+          </div>
+        </div>
+
+        <div class="topTabs" id="topTabs">
+          <div class="tt active" data-tab="todo">To-Do</div>
+          <div class="tt" data-tab="phases">Phases</div>
+          <div class="tt" data-tab="roles">Roles & Legend</div>
+          <div class="tt" data-tab="links">Master Links</div>
+          <div class="tt" data-tab="report">Report</div>
+          <div class="tt" data-tab="settings">Settings</div>
+        </div>
+      </div>
+
+      <div class="warnBar" id="warnBar"></div>
+    </div>
+
+    <div class="grid">
+      <!-- LEFT MAIN -->
+      <div class="card">
+        <div class="cardHead">
+          <div class="h">
+            <b id="rbTitle">Role To-Do</b>
+            <span id="rbDesc">This is generated from the internal RACI. Filter by R/A/C/I and phase windows.</span>
+          </div>
+          <div class="chips" id="rbChips"></div>
+        </div>
+
+        <div class="cardBody">
+          <!-- TO-DO -->
+          <div class="panel active" id="tab-todo">
+            <div class="seg">
+              <div class="tiny muted" style="min-width:220px">
+                <b style="color:var(--text)">Filters</b><br/>
+                Default shows what you <b>own</b> (R/A).
+              </div>
+              <div class="tog" id="toggleRACl">
+                <div class="pill active" data-raci="R">R</div>
+                <div class="pill active" data-raci="A">A</div>
+                <div class="pill" data-raci="C">C</div>
+                <div class="pill" data-raci="I">I</div>
+              </div>
+
+              <div style="flex:1"></div>
+
+              <div class="tog" id="togglePhases">
+                <div class="pill active" data-phase="ALL">All phases</div>
+                <div class="pill" data-phase="P0">Phase 0</div>
+                <div class="pill" data-phase="P1">Day 1</div>
+                <div class="pill" data-phase="P2">Days 2–14</div>
+                <div class="pill" data-phase="G1">Gate 1</div>
+                <div class="pill" data-phase="P4">Days 15–30</div>
+                <div class="pill" data-phase="G30">Gate 30</div>
+                <div class="pill" data-phase="P6">Days 31–90</div>
+                <div class="pill" data-phase="G90">Gate 90</div>
+              </div>
+            </div>
+
+            <div class="list" id="todoList"></div>
+          </div>
+
+          <!-- PHASES -->
+          <div class="panel" id="tab-phases">
+            <div class="item">
+              <div class="itemTop">
+                <div>
+                  <b>Phase map</b>
+                  <div class="tiny muted">This UI uses the universal phases from the internal RACI.</div>
+                </div>
+                <span class="badge phase">Universal</span>
+              </div>
+              <div class="desc" id="phaseMap"></div>
+            </div>
+          </div>
+
+          <!-- ROLES -->
+          <div class="panel" id="tab-roles">
+            <div class="item">
+              <div class="itemTop">
+                <div>
+                  <b>Roles</b>
+                  <div class="tiny muted">Abbreviations used across the onboarding OS.</div>
+                </div>
+                <span class="badge phase">Legend</span>
+              </div>
+              <div class="tableWrap" id="rolesTable"></div>
+            </div>
+
+            <div class="item" style="margin-top:12px">
+              <div class="itemTop">
+                <div>
+                  <b>RACI legend</b>
+                  <div class="tiny muted">What each letter means.</div>
+                </div>
+                <span class="badge phase">Legend</span>
+              </div>
+              <div class="tableWrap" id="legendTable"></div>
+            </div>
+          </div>
+
+          <!-- LINKS -->
+          <div class="panel" id="tab-links">
+            <div class="item">
+              <div class="itemTop">
+                <div>
+                  <b>Onboarding 2026 — Master Links Index</b>
+                  <div class="tiny muted">Central references used by the OS.</div>
+                </div>
+                <span class="badge phase">Index</span>
+              </div>
+              <div class="tableWrap" id="linksTable"></div>
+            </div>
+          </div>
+
+          <!-- REPORT (print/PDF) -->
+          <div class="panel" id="tab-report">
+            <div class="printOnly" id="printArea">
+              <div class="printHeader">
+                <div>
+                  <h1>Onboarding OS — Role To-Do</h1>
+                  <div class="meta" id="printMeta"></div>
+                </div>
+                <div class="meta" style="text-align:right">
+                  Profitable Media<br/>
+                  Internal use only
+                </div>
+              </div>
+              <div class="printList" id="printList"></div>
+            </div>
+
+            <div class="item">
+              <div class="itemTop">
+                <div>
+                  <b>PDF report</b>
+                  <div class="tiny muted">Use “Download PDF” → your browser opens Print dialog → choose “Save as PDF”.</div>
+                </div>
+                <span class="badge phase">Print</span>
+              </div>
+              <div class="desc" id="reportPreviewHint">
+• The report is the same To-Do list you see in the To-Do tab.
+• “Download PDF” will switch to Report view + open Print.
+• In the print dialog, select: Destination → “Save as PDF”.
+              </div>
+            </div>
+          </div>
+
+          <!-- SETTINGS -->
+          <div class="panel" id="tab-settings">
+            <div class="item">
+              <div class="itemTop">
+                <div><b>Settings</b><div class="tiny muted">Local UI preferences (safe). No external calls.</div></div>
+                <span class="badge phase">Local</span>
+              </div>
+              <div class="desc">
+• Default filter is R + A (owned work).<br/>
+• If you want to show “everything you touch”, turn on C/I too.<br/>
+• “ALL” role shows items for every role, grouped by phase and due date.<br/>
+              </div>
+              <div style="margin-top:10px; display:flex; gap:10px; flex-wrap:wrap">
+                <button class="btn" id="btnResetState">Reset saved UI state</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- RIGHT RAIL -->
+      <div class="card">
+        <div class="cardHead">
+          <div class="h">
+            <b>Quick view</b>
+            <span id="panelMeta">Metrics + “what matters” for the selected role.</span>
+          </div>
+          <span class="badge phase">Right rail</span>
+        </div>
+
+        <div class="cardBody">
+          <div class="item">
+            <div class="itemTop">
+              <div><b>Snapshot</b><div class="tiny muted">Generated from the RACI task list.</div></div>
+              <span class="badge due" id="snapDate">—</span>
+            </div>
+            <div class="desc" id="snapshot"></div>
+          </div>
+
+          <div class="item" style="margin-top:12px">
+            <div class="itemTop">
+              <div><b>Escalation rule</b><div class="tiny muted">Use this when things “hang in the air”.</div></div>
+              <span class="badge a">A</span>
+            </div>
+            <div class="desc">
+If ownership is unclear:
+1) Check RACI (who is R/A).  
+2) If still unclear: ask Hiring Manager (HM).  
+3) If system risk / standards issue: escalate to Operations Manager (OM).  
+              </div>
+          </div>
+
+          <div class="item" style="margin-top:12px">
+            <div class="itemTop">
+              <div><b>Done definition</b><div class="tiny muted">Evidence beats “I think it’s done”.</div></div>
+              <span class="badge r">R</span>
+            </div>
+            <div class="desc">
+Every task should end with evidence:
+• Link works / access verified  
+• Doc created + linked in Plan of Record  
+• Tracker entry exists  
+• Meeting scheduled (calendar invite)  
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+<script>
+/***************************************************************
+ * DATA — Embedded from your RACI doc + Master Links Index
+ * NOTE: This is the universal RACI structure used by the OS.
+ ***************************************************************/
+const ROLES = [
+  { role:"Hiring Manager", abbr:"HM", responsibility:"Process Owner / Coordinator (Accountable for success)" },
+  { role:"Operations Manager", abbr:"OM", responsibility:"Governance / Standards / Advisor" },
+  { role:"Senior Buddy", abbr:"SB", responsibility:"Daily Coach + Output QA" },
+  { role:"Operations Coordinator", abbr:"OC", responsibility:"Admin Enablement / Systems Setup" },
+  { role:"New Hire", abbr:"NH", responsibility:"New team member being onboarded" }
+];
+
+const RACI_LEGEND = [
+  { code:"R", def:"Responsible", meaning:"Does the work to complete the task." },
+  { code:"A", def:"Accountable", meaning:"Owns the outcome and provides the final approval." },
+  { code:"C", def:"Consulted", meaning:"Provides input, expertise, or review before the work is done." },
+  { code:"I", def:"Informed", meaning:"Kept in the loop on progress or completion." }
+];
+
+// Phase definitions (universal)
+const PHASES = [
+  { key:"P0", name:"Phase 0 — Preboarding / Day-0 Setup", dayMin:0, dayMax:0,
+    notes:"Exit criteria: Access works; Plan of Record has live links; tracker/log/calendar ready; HM+SB calls scheduled; Jira epic created." },
+  { key:"P1", name:"Phase 1 — Day 1 (Kickoff + Hand-off)", dayMin:1, dayMax:1,
+    notes:"Success definition: New Hire is operational (tools + cadence + tracking started)." },
+  { key:"P2", name:"Phase 2 — Days 2–14 (Daily Coaching + Evidence)", dayMin:2, dayMax:14,
+    notes:"Daily coaching, evidence capture, tracking discipline." },
+  { key:"G1", name:"Phase 3 — Gate 1 (Day 5–7) — Initial Contribution Readiness", dayMin:5, dayMax:7,
+    notes:"Non-negotiable: HM note with autonomy zones, weaknesses, and management guidance." },
+  { key:"P4", name:"Phase 4 — Days 15–30 (Partial Ownership Ramp)", dayMin:15, dayMax:30,
+    notes:"Reduced supervision, growing ownership, improvement tickets from patterns." },
+  { key:"G30", name:"Phase 5 — Gate 30 (Partial Ownership Attainment)", dayMin:30, dayMax:30,
+    notes:"Autonomy assessment + next ownership targets; standards check." },
+  { key:"P6", name:"Phase 6 — Days 31–90 (Autonomy + System Ownership)", dayMin:31, dayMax:90,
+    notes:"Independent operation loops; buddy becomes spot-check QA; docs kept current." },
+  { key:"G90", name:"Phase 7 — Gate 90 (Full Autonomy)", dayMin:90, dayMax:90,
+    notes:"Final autonomy decision + OS/template improvements captured." },
+];
+
+// Universal task rows (derived from the RACI table content)
+const TASKS = [
+  // Phase 0
+  { id:"p0-1", phase:"P0", dayMin:0, dayMax:0, title:"Create hire folder + Drive structure",
+    detail:"Create standardized hire folder + shared-drive structure for onboarding artifacts.",
+    raci:{ HM:"I", OM:"C", SB:"I", OC:"R", NH:"I" } },
+  { id:"p0-2", phase:"P0", dayMin:0, dayMax:0, title:"Collect signed offer / contract flow",
+    detail:"Ensure signed offer/contract is collected and stored in the correct place.",
+    raci:{ HM:"I", OM:"C", SB:"I", OC:"R", NH:"I" } },
+  { id:"p0-3", phase:"P0", dayMin:0, dayMax:0, title:"Provision access (Slack, Google, Jira, HR, Hubstaff, key sheets)",
+    detail:"Invite + provision access across required tools and core sheets/docs.",
+    raci:{ HM:"I", OM:"C", SB:"I", OC:"R", NH:"I" } },
+  { id:"p0-4", phase:"P0", dayMin:0, dayMax:0, title:"Set up tools + confirm logins working",
+    detail:"Validate access works (login test), fix blockers before Day 1.",
+    raci:{ HM:"I", OM:"C", SB:"I", OC:"R", NH:"I" } },
+  { id:"p0-5", phase:"P0", dayMin:0, dayMax:0, title:"Schedule intro call (OC → NH) before HM final call",
+    detail:"Schedule pre-start logistics intro. OC is R/A here.",
+    raci:{ HM:"I", OM:"I", SB:"I", OC:"R/A", NH:"I" } },
+  { id:"p0-6", phase:"P0", dayMin:0, dayMax:0, title:"Run intro call (explain logistics, tools, next steps)",
+    detail:"OC runs logistics orientation: tools, access, what happens next.",
+    raci:{ HM:"I", OM:"I", SB:"I", OC:"R", NH:"I" } },
+  { id:"p0-7", phase:"P0", dayMin:0, dayMax:0, title:"Schedule HM onboarding call + invite SB",
+    detail:"Schedule Day 1 kickoff with HM and ensure SB is invited.",
+    raci:{ HM:"A", OM:"C", SB:"R", OC:"R", NH:"I" } },
+  { id:"p0-8", phase:"P0", dayMin:0, dayMax:0, title:"Create Plan of Record (Doc) — skeleton + links",
+    detail:"Create Plan of Record doc shell + add live links to trackers, calendars, docs.",
+    raci:{ HM:"A", OM:"C", SB:"C", OC:"R", NH:"I" } },
+  { id:"p0-9", phase:"P0", dayMin:0, dayMax:0, title:"Create/attach Week 1–3 calendar + Execution Tracker + Confusion Log",
+    detail:"Create onboarding calendar blocks + create/attach Execution Tracker and Confusion Log.",
+    raci:{ HM:"A", OM:"C", SB:"C", OC:"R", NH:"I" } },
+  { id:"p0-10", phase:"P0", dayMin:0, dayMax:0, title:"Create Jira Epic + Gate 1 task + Daily check-in cadence",
+    detail:"Create Jira epic + add Gate 1 task + define daily check-in rhythm.",
+    raci:{ HM:"A", OM:"C", SB:"R", OC:"R", NH:"I" } },
+  { id:"p0-11", phase:"P0", dayMin:0, dayMax:0, title:"Definition of Ready check (all links + access + meetings)",
+    detail:"Final readiness verification: links, access, meetings scheduled.",
+    raci:{ HM:"A", OM:"C", SB:"C", OC:"R", NH:"I" } },
+
+  // Phase 1 — Day 1
+  { id:"p1-1", phase:"P1", dayMin:1, dayMax:1, title:"OC completes final setup + introduces HM + SB",
+    detail:"OC completes final setup and ensures handoff introductions are clear.",
+    raci:{ HM:"I", OM:"I", SB:"I", OC:"R", NH:"I" } },
+  { id:"p1-2", phase:"P1", dayMin:1, dayMax:1, title:"HM runs kickoff call: explain process + expectations + gates",
+    detail:"Kickoff: explain onboarding OS, cadence, and gate reviews; set standards.",
+    raci:{ HM:"A/R", OM:"C", SB:"C", OC:"I", NH:"I" } },
+  { id:"p1-3", phase:"P1", dayMin:1, dayMax:1, title:"HM formally pairs NH with SB (buddy model rules)",
+    detail:"Assign SB; clarify how to ask questions and what SB reviews daily.",
+    raci:{ HM:"A/R", OM:"C", SB:"R", OC:"I", NH:"I" } },
+  { id:"p1-4", phase:"P1", dayMin:1, dayMax:1, title:"NH confirms understanding of comms + escalation rules",
+    detail:"NH confirms they understand Slack usage, how to escalate, and where info lives.",
+    raci:{ HM:"A", OM:"C", SB:"R", OC:"I", NH:"R" } },
+  { id:"p1-5", phase:"P1", dayMin:1, dayMax:1, title:"Start Execution Tracker usage (Day 1 entries + evidence)",
+    detail:"NH creates Day 1 entry with evidence links (work, notes, outputs).",
+    raci:{ HM:"I", OM:"I", SB:"C", OC:"I", NH:"R" } },
+  { id:"p1-6", phase:"P1", dayMin:1, dayMax:1, title:"Confusion Log started (at least 1 entry)",
+    detail:"NH logs at least 1 real confusion; SB ensures quality; OC audits usage.",
+    raci:{ HM:"A", OM:"C", SB:"R", OC:"R (Compliance Check)", NH:"R" } },
+
+  // Phase 2 — Days 2–14
+  { id:"p2-1", phase:"P2", dayMin:2, dayMax:14, title:"Daily SB check-in (minimum 1/day)",
+    detail:"SB check-in; HM ensures it happens. NH participates and updates blockers.",
+    raci:{ HM:"A (Ensure)", OM:"I", SB:"R", OC:"I", NH:"R" } },
+  { id:"p2-2", phase:"P2", dayMin:2, dayMax:14, title:"SB checks 2× daily if NH is blocked / needs help",
+    detail:"Midday + EOD spot-checks; keep NH unstuck.",
+    raci:{ HM:"A (Ensure)", OM:"I", SB:"R", OC:"I", NH:"I" } },
+  { id:"p2-3", phase:"P2", dayMin:2, dayMax:14, title:"NH executes daily tasks + updates Execution Tracker",
+    detail:"NH completes tasks and updates Execution Tracker with evidence.",
+    raci:{ HM:"I", OM:"I", SB:"C", OC:"I", NH:"R" } },
+  { id:"p2-4", phase:"P2", dayMin:2, dayMax:14, title:"SB reviews NH output, corrects errors, gives feedback",
+    detail:"SB reviews output quality and corrects execution patterns.",
+    raci:{ HM:"I", OM:"I", SB:"R/A", OC:"I", NH:"I" } },
+  { id:"p2-5", phase:"P2", dayMin:2, dayMax:14, title:"Confusion Log filled (NH + SB); OC audits usage (compliance)",
+    detail:"NH and SB log confusions; OC audits usage only (not content).",
+    raci:{ HM:"A", OM:"C", SB:"R", OC:"R/A", NH:"R" } },
+  { id:"p2-6", phase:"P2", dayMin:2, dayMax:14, title:"HM monitors progress + reviews confusion patterns",
+    detail:"HM looks for patterns; fixes systemic issues, not individual micro-tasks.",
+    raci:{ HM:"R/A", OM:"C", SB:"C", OC:"I", NH:"I" } },
+  { id:"p2-7", phase:"P2", dayMin:2, dayMax:14, title:"OM provides advisory + standard enforcement if needed",
+    detail:"OM acts as governance; enforces standards when drift occurs.",
+    raci:{ HM:"I", OM:"R/A", SB:"C", OC:"I", NH:"I" } },
+
+  // Gate 1 — Day 5–7
+  { id:"g1-1", phase:"G1", dayMin:5, dayMax:7, title:"Compile evidence (tracker + confusion log + Jira)",
+    detail:"Gather evidence pack for Gate 1 decision.",
+    raci:{ HM:"A", OM:"C", SB:"R", OC:"I", NH:"C" } },
+  { id:"g1-2", phase:"G1", dayMin:5, dayMax:7, title:"SB evaluation of output quality + independence level",
+    detail:"SB gives assessment on quality + independence and gaps.",
+    raci:{ HM:"C", OM:"I", SB:"R", OC:"I", NH:"I" } },
+  { id:"g1-3", phase:"G1", dayMin:5, dayMax:7, title:"HM final gate decision (Pass / Conditional / Fail)",
+    detail:"HM makes decision based on evidence; communicates outcome and expectations.",
+    raci:{ HM:"R/A", OM:"C", SB:"C", OC:"I", NH:"I" } },
+  { id:"g1-4", phase:"G1", dayMin:5, dayMax:7, title:"Update “Management Instructions” for Ops dept",
+    detail:"HM produces required note: autonomy zones, review zones, risks, strengths/weaknesses, supervision level.",
+    raci:{ HM:"R/A", OM:"C", SB:"C", OC:"I", NH:"I" } },
+
+  // Phase 4 — Days 15–30
+  { id:"p4-1", phase:"P4", dayMin:15, dayMax:30, title:"SB reduces supervision based on Gate 1 result",
+    detail:"SB adjusts supervision intensity according to Gate 1 outcome.",
+    raci:{ HM:"A (Ensure)", OM:"I", SB:"R", OC:"I", NH:"I" } },
+  { id:"p4-2", phase:"P4", dayMin:15, dayMax:30, title:"NH owns selected domains (observe → execute → decide)",
+    detail:"NH takes ownership of selected domains; grows decision-making.",
+    raci:{ HM:"I", OM:"I", SB:"C", OC:"I", NH:"R" } },
+  { id:"p4-3", phase:"P4", dayMin:15, dayMax:30, title:"HM monitors and adjusts ramp (scope, responsibilities)",
+    detail:"HM adjusts ramp plan: scope, responsibilities, and boundaries.",
+    raci:{ HM:"R/A", OM:"C", SB:"C", OC:"I", NH:"I" } },
+  { id:"p4-4", phase:"P4", dayMin:15, dayMax:30, title:"Confusion patterns → Jira improvement tickets",
+    detail:"Convert recurring confusions into Jira improvements.",
+    raci:{ HM:"A", OM:"C", SB:"R", OC:"I", NH:"C" } },
+
+  // Gate 30 — Day 30
+  { id:"g30-1", phase:"G30", dayMin:30, dayMax:30, title:"SB provides performance summary + evidence",
+    detail:"SB delivers evidence-based performance summary.",
+    raci:{ HM:"C", OM:"I", SB:"R", OC:"I", NH:"I" } },
+  { id:"g30-2", phase:"G30", dayMin:30, dayMax:30, title:"HM assesses autonomy + sets next ownership targets",
+    detail:"HM assesses autonomy and sets next ownership targets.",
+    raci:{ HM:"R/A", OM:"C", SB:"C", OC:"I", NH:"I" } },
+  { id:"g30-3", phase:"G30", dayMin:30, dayMax:30, title:"OM validates standards / risk areas",
+    detail:"OM validates standards; flags risk areas (if any).",
+    raci:{ HM:"I", OM:"C", SB:"I", OC:"I", NH:"I" } },
+
+  // Phase 6 — Days 31–90
+  { id:"p6-1", phase:"P6", dayMin:31, dayMax:90, title:"NH runs recurring ops loops independently",
+    detail:"NH executes recurring loops without daily dependency on SB.",
+    raci:{ HM:"I", OM:"I", SB:"C", OC:"I", NH:"R" } },
+  { id:"p6-2", phase:"P6", dayMin:31, dayMax:90, title:"SB becomes spot-check QA (not daily dependency)",
+    detail:"SB moves to spot-checks and quality audits as needed.",
+    raci:{ HM:"I", OM:"I", SB:"R", OC:"I", NH:"I" } },
+  { id:"p6-3", phase:"P6", dayMin:31, dayMax:90, title:"HM ensures role docs + 1–90 plan is kept current",
+    detail:"HM keeps docs and plan current; OC helps build docs where needed.",
+    raci:{ HM:"R/A", OM:"C", SB:"C", OC:"R (Helps Build Docs)", NH:"I" } },
+  { id:"p6-4", phase:"P6", dayMin:31, dayMax:90, title:"OM advises on process design + standards",
+    detail:"OM advises on process design; ensures standards don’t degrade.",
+    raci:{ HM:"I", OM:"R/A", SB:"C", OC:"I", NH:"I" } },
+
+  // Gate 90 — Day 90
+  { id:"g90-1", phase:"G90", dayMin:90, dayMax:90, title:"Evidence compilation + performance review",
+    detail:"Compile evidence pack; conduct performance review.",
+    raci:{ HM:"R/A", OM:"C", SB:"R", OC:"I", NH:"C" } },
+  { id:"g90-2", phase:"G90", dayMin:90, dayMax:90, title:"Final autonomy decision",
+    detail:"Final decision on full autonomy and operating mode.",
+    raci:{ HM:"R/A", OM:"C", SB:"C", OC:"I", NH:"I" } },
+  { id:"g90-3", phase:"G90", dayMin:90, dayMax:90, title:"System improvements captured + OS/templates updated",
+    detail:"Capture improvements and update OS/templates accordingly.",
+    raci:{ HM:"C", OM:"A", SB:"C", OC:"R", NH:"I" } },
+];
+
+const MASTER_LINKS = [
+  { category:"0 OS folder", item:"OS folder", link:"https://drive.google.com/drive/u/2/folders/1VUGdm3GAvDwL2427wxGgjaojcfe3O8M2" },
+  { category:"0", item:"Confusion log info", link:"https://docs.google.com/document/d/1Ep_DhQp742uR8XF6DO1j2qTZHh_0EEpC/edit?usp=drive_link&ouid=107489725426737226211&rtpof=true&sd=true" },
+  { category:"0", item:"Onboarding Ops system", link:"https://docs.google.com/document/d/14jB5SMHgrsi9Qmz6hY5uR8kzUTQllf5z/edit?usp=drive_link&ouid=107489725426737226211&rtpof=true&sd=true" },
+  { category:"0", item:"Internal Checklist before onboarding", link:"https://docs.google.com/document/d/12GOGsUkAI5LOo53a76J0uyM-TnO1czJ-/edit?usp=drive_link&ouid=107489725426737226211&rtpof=true&sd=true" },
+  { category:"0", item:"RACI for Onboarding (Hiring Manager + Operations Coordinator)", link:"https://docs.google.com/document/d/1W7ovU5O41G--GUBd9KhuRwYOxMsoOCeGCB3zgyb7Eow/edit?tab=t.gu0x852m5j6" },
+  { category:"0", item:"Senior Buddy instructions", link:"https://docs.google.com/document/d/1jaTb5GQaEh3CLG-FbgkSE7dpXC_XE2VwXgbDvp7EolA/edit?tab=t.ua3uq593h0zy" },
+  { category:"1- Roles", item:"Operations Coordinator", link:"https://docs.google.com/document/d/1loVu9SuH7lYRTdT6rBSYSdMux4rz2wFw/edit?usp=drive_link&ouid=107489725426737226211&rtpof=true&sd=true" },
+  { category:"1- Roles", item:"Operations Coordinator 3 weeks (sheet)", link:"https://docs.google.com/spreadsheets/d/1vZylzFhwJPB-a_CAqkgN1nOAIrEBj94C7EnESPX2PvM/edit?usp=drive_link" },
+  { category:"1- Roles", item:"RACI (Operations Coordinator)", link:"https://docs.google.com/document/d/1wzDpDPKxO72Fb4mehbKtUNOzlk6v6lnW/edit?usp=drive_link&ouid=107489725426737226211&rtpof=true&sd=true" },
+  { category:"1- Roles", item:"Taily + experience form", link:"https://docs.google.com/document/d/1vnPDIjGFvC9ImJxXQKIROfFx-kvh6C0P/edit?usp=drive_link&ouid=107489725426737226211&rtpof=true&sd=true" },
+  { category:"2- Hires", item:"[Candidate Name] Operations Coordinator - Confusion Log", link:"https://docs.google.com/spreadsheets/d/1-dn184N1Rgd6CbZ0n_PftZWp1PpDb0iDQ_6XsS7-SUw/edit?usp=drive_link" },
+  { category:"2- Hires", item:"[Candidate Name] Operations Coordinator - Execution Tracker", link:"https://docs.google.com/spreadsheets/d/1q97Ym3Voi2I_tVjH02oOg1p9qXGkXhcMRaSuW6VGOK0/edit?usp=drive_link" },
+  { category:"2- Hires", item:"[Candidate Name] Operations Coordinator - Gates reviews", link:"https://docs.google.com/document/d/1j7y-BJ6d3CgAv6WP5vyFABpSJGOvl5T3/edit?usp=drive_link&ouid=107489725426737226211&rtpof=true&sd=true" },
+  { category:"2- Hires", item:"[Candidate Name] Operations Coordinator - Plan of Record", link:"https://docs.google.com/document/d/1h9F1KBm5DVvLTtGYhnvdPpjoinj3LjZC/edit?usp=drive_link&ouid=107489725426737226211&rtpof=true&sd=true" },
+  { category:"3. Templates", item:"Confusion log template", link:"https://docs.google.com/spreadsheets/d/1MrJub2erbQ340GgpLzcJZQuYSyOU3cy8lYdv8F6AG6M/edit?usp=drive_link" },
+  { category:"3. Templates", item:"Execution tracker template", link:"https://docs.google.com/spreadsheets/d/1bgl_O4WUwV9wk0dfNa9xG5YUe1SASaXY/edit?usp=drive_link&ouid=107489725426737226211&rtpof=true&sd=true" },
+  { category:"3. Templates", item:"Gate Reviews Template", link:"https://docs.google.com/document/d/1cAc-YCwhL2RJOUqyk2RZvDcqjga7Fogi/edit?usp=drive_link&ouid=107489725426737226211&rtpof=true&sd=true" },
+  { category:"3. Templates", item:"Plan of Record Template", link:"https://docs.google.com/document/d/1kUjyOTDPOqaxG6R4L9AjnicCr6faa-Cu/edit?usp=drive_link&ouid=107489725426737226211&rtpof=true&sd=true" },
+];
+
+/***************************************************************
+ * APP
+ ***************************************************************/
+(() => {
+  const $ = (sel) => document.querySelector(sel);
+  const $$ = (sel) => Array.from(document.querySelectorAll(sel));
+  const byId = (id) => document.getElementById(id);
+
+  const warnBar = byId("warnBar");
+  const STORAGE_KEY = "pm_onboarding_raci_todo_v1";
+
+  const DEFAULT = {
+    startDate:"",
+    role:"Hiring Manager (HM)",
+    tab:"todo",
+    raciFilter:["R","A"],
+    phaseFilter:"ALL"
+  };
+
+  let STATE = loadState();
+  let LAST = { items:[], text:"" };
+
+  function showWarn(msg){
+    warnBar.textContent = msg;
+    warnBar.classList.add("show");
+  }
+  function hideWarn(){
+    warnBar.textContent = "";
+    warnBar.classList.remove("show");
+  }
+
+  function loadState(){
+    try{
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if(!raw) return { ...DEFAULT };
+      const parsed = JSON.parse(raw);
+      return { ...DEFAULT, ...parsed };
+    }catch(e){
+      return { ...DEFAULT };
+    }
+  }
+  function saveState(patch){
+    STATE = { ...STATE, ...patch };
+    try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(STATE)); }catch(e){}
+  }
+
+  function esc(s){
+    return String(s ?? "")
+      .replaceAll("&","&amp;")
+      .replaceAll("<","&lt;")
+      .replaceAll(">","&gt;")
+      .replaceAll('"',"&quot;")
+      .replaceAll("'","&#039;");
+  }
+
+  function fmtDate(d){
+    const yyyy = d.getFullYear();
+    const mm = String(d.getMonth()+1).padStart(2,"0");
+    const dd = String(d.getDate()).padStart(2,"0");
+    return `${yyyy}-${mm}-${dd}`;
+  }
+
+  // Day mapping:
+  // Day 1 = startDate
+  // Day 0 = startDate - 1 day (preboarding)
+  function dateForDay(startDateISO, day){
+    const base = new Date(startDateISO + "T00:00:00");
+    const d = new Date(base);
+    d.setDate(d.getDate() + (day - 1));
+    return d;
+  }
+
+  function normalizeRole(roleSelectValue){
+    if(roleSelectValue === "ALL") return "ALL";
+    // "Hiring Manager (HM)" -> "HM"
+    const m = roleSelectValue.match(/\((.*?)\)/);
+    return m ? m[1].trim() : roleSelectValue.trim();
+  }
+
+  const ROLE_THEME = {
+    "ALL": { accent:"#22c55e", accent2:"#16a34a" },
+    "HM":  { accent:"#22c55e", accent2:"#16a34a" },
+    "OM":  { accent:"#ef4444", accent2:"#dc2626" },
+    "SB":  { accent:"#a78bfa", accent2:"#8b5cf6" },
+    "OC":  { accent:"#f59e0b", accent2:"#d97706" },
+    "NH":  { accent:"#60a5fa", accent2:"#3b82f6" },
+  };
+  function applyTheme(roleAbbr){
+    const t = ROLE_THEME[roleAbbr] || ROLE_THEME.ALL;
+    document.documentElement.style.setProperty("--accent", t.accent);
+    document.documentElement.style.setProperty("--accent2", t.accent2);
+  }
+
+  function parseRaciCell(cell){
+    // supports "R", "A", "C", "I", "R/A", "A (Ensure)", "R (Compliance Check)", etc.
+    const raw = String(cell || "").trim();
+    if(!raw) return [];
+    const tokens = raw.split(/[,\s]+/).filter(Boolean); // safe-ish
+    // But we want just R/A/C/I presence:
+    const found = new Set();
+    if(raw.includes("R")) found.add("R");
+    if(raw.includes("A")) found.add("A");
+    if(raw.includes("C")) found.add("C");
+    if(raw.includes("I")) found.add("I");
+    return Array.from(found);
+  }
+
+  function getPhaseLabel(key){
+    const p = PHASES.find(x => x.key === key);
+    return p ? p.name : key;
+  }
+
+  function dueLabel(startISO, dayMin, dayMax){
+    const dMin = fmtDate(dateForDay(startISO, dayMin));
+    const dMax = fmtDate(dateForDay(startISO, dayMax));
+    if(dayMin === dayMax) return `Due: ${dMin} (Day ${dayMin})`;
+    return `Window: ${dMin} → ${dMax} (Days ${dayMin}–${dayMax})`;
+  }
+
+  function isOverdue(startISO, dayMin, dayMax){
+    const today = new Date();
+    const end = dateForDay(startISO, dayMax);
+    // overdue if end date is before today (date-only)
+    const T = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+    const E = new Date(end.getFullYear(), end.getMonth(), end.getDate());
+    return E < T;
+  }
+
+  function buildItems(startISO, roleAbbr, raciFilter, phaseFilter){
+    const items = TASKS
+      .filter(t => phaseFilter === "ALL" ? true : t.phase === phaseFilter)
+      .filter(t => {
+        if(roleAbbr === "ALL") return true;
+        const cell = t.raci?.[roleAbbr];
+        const letters = parseRaciCell(cell);
+        return letters.some(l => raciFilter.includes(l));
+      })
+      .map(t => {
+        const due = dueLabel(startISO, t.dayMin, t.dayMax);
+        const overdue = isOverdue(startISO, t.dayMin, t.dayMax);
+        return { ...t, due, overdue };
+      })
+      .sort((a,b) => (a.dayMin - b.dayMin) || (a.dayMax - b.dayMax) || a.title.localeCompare(b.title));
+
+    return items;
+  }
+
+  function raciBadgesForRole(task, roleAbbr){
+    if(roleAbbr === "ALL"){
+      // show all abbreviations with their R/A/C/I letter(s) for each role
+      const parts = ["HM","OM","SB","OC","NH"].map(r => {
+        const letters = parseRaciCell(task.raci?.[r]).join("/");
+        if(!letters) return `<span class="badge i">${r}: —</span>`;
+        // compact mapping: choose first letter for color, but keep text
+        const first = letters[0];
+        const cls = first === "R" ? "r" : first === "A" ? "a" : first === "C" ? "c" : "i";
+        return `<span class="badge ${cls}">${r}: ${esc(letters)}</span>`;
+      });
+      return parts.join(" ");
+    } else {
+      const letters = parseRaciCell(task.raci?.[roleAbbr]).join("/");
+      if(!letters) return `<span class="badge i">${roleAbbr}: —</span>`;
+      const first = letters[0];
+      const cls = first === "R" ? "r" : first === "A" ? "a" : first === "C" ? "c" : "i";
+      return `<span class="badge ${cls}">${roleAbbr}: ${esc(letters)}</span>`;
+    }
+  }
+
+  function taskCard(task, startISO, roleAbbr){
+    const dueBadge = task.overdue
+      ? `<span class="badge overdue">${esc(task.due)} • Overdue</span>`
+      : `<span class="badge due">${esc(task.due)}</span>`;
+
+    return `
+      <div class="item">
+        <div class="itemTop">
+          <div style="min-width:0">
+            <div style="font-weight:950">
+              ${esc(task.title)}
+              <span class="muted">— ${esc(getPhaseLabel(task.phase))}</span>
+            </div>
+            <div class="desc">${esc(task.detail)}</div>
+            <div class="tiny muted" style="margin-top:8px">
+              Evidence: link created / access verified / tracker updated / meeting scheduled (as applicable).
+            </div>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:8px;align-items:flex-end;max-width:44%">
+            <span class="badge phase">${esc(task.phase)}</span>
+            ${dueBadge}
+            <div style="display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end">
+              ${raciBadgesForRole(task, roleAbbr)}
+            </div>
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
+  function renderRolesTable(){
+    const wrap = byId("rolesTable");
+    wrap.innerHTML = `
+      <table>
+        <thead><tr><th>Role</th><th>Abbr</th><th>Core responsibility</th></tr></thead>
+        <tbody>
+          ${ROLES.map(r => `
+            <tr>
+              <td>${esc(r.role)}</td>
+              <td>${esc(r.abbr)}</td>
+              <td>${esc(r.responsibility)}</td>
+            </tr>
+          `).join("")}
+        </tbody>
+      </table>
+    `;
+  }
+
+  function renderLegendTable(){
+    const wrap = byId("legendTable");
+    wrap.innerHTML = `
+      <table>
+        <thead><tr><th>Code</th><th>Definition</th><th>Meaning</th></tr></thead>
+        <tbody>
+          ${RACI_LEGEND.map(r => `
+            <tr>
+              <td><b>${esc(r.code)}</b></td>
+              <td>${esc(r.def)}</td>
+              <td>${esc(r.meaning)}</td>
+            </tr>
+          `).join("")}
+        </tbody>
+      </table>
+    `;
+  }
+
+  function renderLinksTable(){
+    const wrap = byId("linksTable");
+    wrap.innerHTML = `
+      <table>
+        <thead><tr><th style="min-width:140px">Category</th><th style="min-width:280px">Item</th><th>Link</th></tr></thead>
+        <tbody>
+          ${MASTER_LINKS.map(x => `
+            <tr>
+              <td>${esc(x.category)}</td>
+              <td>${esc(x.item)}</td>
+              <td><a href="${esc(x.link)}" target="_blank" rel="noreferrer">${esc(x.link)}</a></td>
+            </tr>
+          `).join("")}
+        </tbody>
+      </table>
+    `;
+  }
+
+  function renderPhaseMap(){
+    const el = byId("phaseMap");
+    const lines = [];
+    PHASES.forEach(p => {
+      const range = p.dayMin === p.dayMax ? `Day ${p.dayMin}` : `Days ${p.dayMin}–${p.dayMax}`;
+      lines.push(`${p.key}: ${p.name}`);
+      lines.push(`• Range: ${range}`);
+      lines.push(`• Notes: ${p.notes}`);
+      lines.push("");
+    });
+    el.textContent = lines.join("\n").trim();
+  }
+
+  function setTab(tab){
+    saveState({ tab });
+    $$(".tt").forEach(t => t.classList.toggle("active", t.dataset.tab === tab));
+    $$(".panel").forEach(p => p.classList.remove("active"));
+    const panel = byId(`tab-${tab}`);
+    if(panel) panel.classList.add("active");
+  }
+
+  function setPhaseFilter(phaseKey){
+    saveState({ phaseFilter: phaseKey });
+    // toggle UI
+    $$("#togglePhases .pill").forEach(p => p.classList.toggle("active", p.dataset.phase === phaseKey));
+    generate(false);
+  }
+
+  function toggleRaci(letter){
+    const curr = new Set(STATE.raciFilter || []);
+    if(curr.has(letter)) curr.delete(letter); else curr.add(letter);
+    const next = Array.from(curr);
+    if(next.length === 0) { next.push("R","A"); } // safety: never empty
+    saveState({ raciFilter: next });
+    // toggle UI
+    $$("#toggleRACl .pill").forEach(p => {
+      const l = p.dataset.raci;
+      p.classList.toggle("active", next.includes(l));
+    });
+    generate(false);
+  }
+
+  function buildTextReport(items, startISO, roleAbbr){
+    const lines = [];
+    lines.push(`Onboarding OS — Role To-Do`);
+    lines.push(`Role: ${roleAbbr}`);
+    lines.push(`Start date (Day 1): ${startISO}`);
+    lines.push(`Generated: ${fmtDate(new Date())}`);
+    lines.push(`Filters: RACI=${(STATE.raciFilter||[]).join(", ")} • Phase=${STATE.phaseFilter}`);
+    lines.push("");
+    items.forEach((t, idx) => {
+      lines.push(`${idx+1}. ${t.title}`);
+      lines.push(`   Phase: ${t.phase} • ${t.due}${t.overdue ? " • OVERDUE" : ""}`);
+      lines.push(`   Detail: ${t.detail}`);
+      if(roleAbbr === "ALL"){
+        lines.push(`   RACI: HM=${t.raci.HM||"—"} • OM=${t.raci.OM||"—"} • SB=${t.raci.SB||"—"} • OC=${t.raci.OC||"—"} • NH=${t.raci.NH||"—"}`);
+      } else {
+        lines.push(`   Your RACI: ${roleAbbr}=${t.raci[roleAbbr] || "—"}`);
+      }
+      lines.push("");
+    });
+    return lines.join("\n").trim();
+  }
+
+  function renderSnapshot(items, startISO, roleAbbr){
+    const today = fmtDate(new Date());
+    byId("snapDate").textContent = today;
+
+    const owned = items.length;
+    const overdue = items.filter(x => x.overdue).length;
+    const earliest = items[0] ? items[0].due : "—";
+
+    const sn = [];
+    sn.push(`Role: ${roleAbbr}`);
+    sn.push(`Start (Day 1): ${startISO}`);
+    sn.push(`Tasks shown: ${owned} • Overdue: ${overdue}`);
+    sn.push(`First due window: ${earliest}`);
+    sn.push("");
+    sn.push("Tip: keep R/A on by default. Turn on C/I only when you want full context.");
+    byId("snapshot").textContent = sn.join("\n");
+  }
+
+  function generate(showWarnings=true){
+    hideWarn();
+
+    const startISO = byId("startDate").value;
+    const roleSel = byId("roleSelect").value;
+    const roleAbbr = normalizeRole(roleSel);
+
+    if(!startISO){
+      if(showWarnings) showWarn("Please set a Start date (Day 1).");
+      return;
+    }
+
+    applyTheme(roleAbbr);
+
+    saveState({ startDate:startISO, role:roleSel });
+
+    const items = buildItems(startISO, roleAbbr, STATE.raciFilter || ["R","A"], STATE.phaseFilter || "ALL");
+    const list = byId("todoList");
+
+    // Header summary
+    const phaseLabel = STATE.phaseFilter === "ALL" ? "All phases" : getPhaseLabel(STATE.phaseFilter);
+    byId("rbTitle").textContent = roleAbbr === "ALL" ? `ALL roles • Universal Onboarding RACI` : `${roleSel} • To-Do`;
+    byId("rbDesc").textContent = `Showing: ${phaseLabel} • RACI: ${(STATE.raciFilter||[]).join("+")}`;
+    byId("rbChips").innerHTML = `
+      <span class="chip">Start (Day 1): ${esc(startISO)}</span>
+      <span class="chip">Phase: ${esc(phaseLabel)}</span>
+      <span class="chip emph">Tasks: ${items.length}</span>
+      <span class="chip">Overdue: ${items.filter(x=>x.overdue).length}</span>
+    `;
+
+    // Render cards
+    list.innerHTML = items.length
+      ? items.map(t => taskCard(t, startISO, roleAbbr)).join("")
+      : `<div class="item"><div class="desc">No tasks match your filters.</div></div>`;
+
+    // Build report
+    const text = buildTextReport(items, startISO, roleAbbr);
+    LAST = { items, text };
+
+    // Print area
+    byId("printMeta").textContent = `Role: ${roleAbbr} • Start (Day 1): ${startISO} • Generated: ${fmtDate(new Date())} • Filters: ${(STATE.raciFilter||[]).join("+")} • Phase: ${STATE.phaseFilter}`;
+    byId("printList").innerHTML = items.length
+      ? items.map(t => `
+          <div class="item">
+            <div class="itemTop">
+              <div>
+                <b>${esc(t.title)}</b><div class="tiny muted">${esc(getPhaseLabel(t.phase))}</div>
+                <div class="desc">${esc(t.detail)}</div>
+              </div>
+              <div style="display:flex;flex-direction:column;gap:6px;align-items:flex-end">
+                <span class="badge">${esc(t.phase)}</span>
+                <span class="badge ${t.overdue ? "overdue" : ""}">${esc(t.due)}${t.overdue ? " • Overdue" : ""}</span>
+              </div>
+            </div>
+          </div>
+        `).join("")
+      : `<div class="item"><div class="desc">No tasks match your filters.</div></div>`;
+
+    renderSnapshot(items, startISO, roleAbbr);
+  }
+
+  async function copyToClipboard(){
+    try{
+      await navigator.clipboard.writeText(LAST.text || "");
+      alert("To-Do copied.");
+    }catch(e){
+      alert("Copy failed — open Report tab and copy manually.");
+    }
+  }
+
+  function downloadPDF(){
+    // Switch to report tab, then open print dialog (user saves as PDF)
+    setTab("report");
+    // Wait a tick so the DOM updates
+    setTimeout(() => window.print(), 30);
+  }
+
+  function renderStaticTables(){
+    renderRolesTable();
+    renderLegendTable();
+    renderLinksTable();
+    renderPhaseMap();
+  }
+
+  function init(){
+    // Restore
+    const todayISO = fmtDate(new Date());
+    byId("startDate").value = STATE.startDate || todayISO;
+    byId("roleSelect").value = STATE.role || "Hiring Manager (HM)";
+    applyTheme(normalizeRole(byId("roleSelect").value));
+
+    // Tabs
+    $$(".tt").forEach(t => t.addEventListener("click", () => setTab(t.dataset.tab)));
+    setTab(STATE.tab || "todo");
+
+    // RACI toggles
+    const curr = new Set(STATE.raciFilter || ["R","A"]);
+    $$("#toggleRACl .pill").forEach(p => {
+      p.classList.toggle("active", curr.has(p.dataset.raci));
+      p.addEventListener("click", () => toggleRaci(p.dataset.raci));
+    });
+
+    // Phase filter toggles
+    const pf = STATE.phaseFilter || "ALL";
+    $$("#togglePhases .pill").forEach(p => {
+      p.classList.toggle("active", p.dataset.phase === pf);
+      p.addEventListener("click", () => setPhaseFilter(p.dataset.phase));
+    });
+
+    // Controls
+    byId("btnGenerate").addEventListener("click", () => generate(true));
+    byId("btnCopy").addEventListener("click", copyToClipboard);
+    byId("btnPDF").addEventListener("click", downloadPDF);
+    byId("btnPrint").addEventListener("click", () => window.print());
+
+    byId("roleSelect").addEventListener("change", () => generate(false));
+    byId("startDate").addEventListener("change", () => generate(false));
+
+    byId("btnResetState").addEventListener("click", () => {
+      localStorage.removeItem(STORAGE_KEY);
+      alert("Saved UI state reset. Reload the page.");
+    });
+
+    renderStaticTables();
+    generate(false);
+  }
+
+  init();
+})();
+</script>
+</body>
+</html>
